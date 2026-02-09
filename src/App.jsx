@@ -158,6 +158,7 @@ const BaseballDashboard = () => {
 
   const [sortKey, setSortKey] = useState('name');
   const [sortAsc, setSortAsc] = useState(true);
+  const [showPA, setShowPA] = useState(false); // 타석 컬럼: 기본 숨김, 토글로 표시
   const sortedPlayers = useMemo(() => {
     return [...players].sort((a, b) => {
       if (sortKey === 'name') {
@@ -270,6 +271,15 @@ const BaseballDashboard = () => {
       {/* ... */}
       {/* ... 아래쪽 테이블 코드 기존과 동일 ... */}
        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg mt-8">
+        <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-slate-800">
+          <button
+            type="button"
+            onClick={() => setShowPA((v) => !v)}
+            className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded border border-slate-600 hover:border-slate-500 transition"
+          >
+            {showPA ? '타석 숨기기' : '타석 열기'}
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
             <colgroup>
@@ -277,7 +287,7 @@ const BaseballDashboard = () => {
               <col className="w-16" />
               <col className="w-14" />
               <col className="w-14" />
-              <col className="w-14" />
+              {showPA && <col className="w-14" />}
               <col className="w-16" />
               <col className="w-14" />
               <col className="w-14" />
@@ -294,9 +304,9 @@ const BaseballDashboard = () => {
                 {[
                   { key: 'name', label: '선수명', align: 'left' },
                   { key: 'avg', label: '타율', align: 'right' },
-                  { key: 'hits', label: '안타', align: 'right' },
-                  { key: 'pa', label: '타석', align: 'right' },
                   { key: 'atBats', label: '타수', align: 'right' },
+                  { key: 'hits', label: '안타', align: 'right' },
+                  ...(showPA ? [{ key: 'pa', label: '타석', align: 'right' }] : []),
                   { key: 'ops', label: 'OPS', align: 'right' },
                   { key: 'wRC_plus', label: 'wRC', align: 'right' },
                   { key: 'walks', label: '볼넷', align: 'right' },
@@ -322,7 +332,7 @@ const BaseballDashboard = () => {
             <tbody className="divide-y divide-slate-800">
               {sortedPlayers.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={showPA ? 15 : 14} className="px-4 py-8 text-center text-slate-500">
                     등록된 선수 기록이 없습니다. 위 폼에서 선수를 추가해보세요.
                   </td>
                 </tr>
@@ -331,9 +341,9 @@ const BaseballDashboard = () => {
                   <tr key={p.id} className="hover:bg-slate-800/50 transition">
                     <td className="py-3 pl-4 pr-2 font-medium text-white sticky left-0 bg-slate-900 z-10 text-left">{p.name}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.avg === 'number' ? p.avg.toFixed(3) : '-'}</td>
-                    <td className="py-3 px-2 font-mono text-right tabular-nums">{p.hits ?? 0}</td>
-                    <td className="py-3 px-2 font-mono text-right tabular-nums">{p.pa ?? 0}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.atBats ?? 0}</td>
+                    <td className="py-3 px-2 font-mono text-right tabular-nums">{p.hits ?? 0}</td>
+                    {showPA && <td className="py-3 px-2 font-mono text-right tabular-nums">{p.pa ?? 0}</td>}
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.ops === 'number' ? p.ops.toFixed(3) : '-'}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.wRC_plus === 'number' ? Math.round(p.wRC_plus) : '-'}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.walks ?? 0}</td>

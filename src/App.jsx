@@ -194,12 +194,12 @@ const BaseballDashboard = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-            Mad Dogs Manager
+            배트맨 리턴즈
           </h1>
-          <p className="text-slate-400 text-sm flex items-center gap-2">
+          {/* <p className="text-slate-400 text-sm flex items-center gap-2">
             Team Stats & Analytics 
             <span className="text-[10px] bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700">Online DB Connected</span>
-          </p>
+          </p> */}
         </div>
         
         {/* 팀 요약 스탯 (동일) */}

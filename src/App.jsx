@@ -132,24 +132,28 @@ const BaseballDashboard = () => {
       const sbTotal = p.sb + sbFailVal;
       const sbRate = sbTotal > 0 ? (p.sb / sbTotal) * 100 : 0;
 
-      const rc = p.pa > 0 ? ((p.hits + p.walks) * totalBases) / p.pa : 0;
+      // RC: (안타+볼넷)*totalBases + 볼넷 기여(출루 가치). 볼넷만 있어도 RC > 0
+      const walkValue = 0.26; // 볼넷 1개당 대략적인 run 기여
+      const rc = p.pa > 0
+        ? (((p.hits + p.walks) * totalBases) + (p.walks ?? 0) * walkValue) / p.pa
+        : 0;
 
       return { ...p, atBats, single, avg, obp, slg, ops, rc, sbRate };
     });
 
     const teamTotalRC = calculated.reduce((acc, cur) => acc + cur.rc, 0);
     const teamAvgRC = calculated.length ? teamTotalRC / calculated.length : 0;
-    // 팀 평균 = 선수별 RC/PA의 평균 (선수 1인당 1표). 무안타 선수가 있어도 좋은 타자 wRC가 과하게 치솟지 않음.
+    // 팀 평균 = 선수별 RC/PA의 평균. rc는 이미 (…)/PA 이라 타석당 비율임.
     const avgRCperPA = calculated.length
-      ? calculated.reduce((acc, cur) => acc + (cur.pa > 0 ? cur.rc / cur.pa : 0), 0) / calculated.length
+      ? calculated.reduce((acc, cur) => acc + (cur.pa > 0 ? cur.rc : 0), 0) / calculated.length
       : 0;
 
     return calculated.map(p => {
-      // wRC: 팀 내 평균(선수별 RC/PA 평균)을 100으로 두고 계산.
+      // wRC: 팀 내 평균 = 100. rc는 이미 타석당 비율이므로 p.rc 그대로 사용 (p.rc/p.pa 아님).
       let wRC_plus = 0;
       if (p.pa > 0 && avgRCperPA > 0) {
-        const playerRCperPA = p.rc / p.pa;
-        wRC_plus = Math.round((playerRCperPA / avgRCperPA) * 100);
+        const playerRCperPA = p.rc; // rc가 이미 runs per PA
+        wRC_plus = Math.round((playerRCperPA / avgRCperPA) * 1000) / 10;
       }
       const war = (p.rc - teamAvgRC) / 5;
       return { ...p, wRC_plus, war };
@@ -285,6 +289,7 @@ const BaseballDashboard = () => {
             <colgroup>
               <col className="w-24 min-w-[6rem]" />
               <col className="w-16" />
+              <col className="w-16" />
               <col className="w-14" />
               <col className="w-14" />
               {showPA && <col className="w-14" />}
@@ -304,6 +309,7 @@ const BaseballDashboard = () => {
                 {[
                   { key: 'name', label: '선수명', align: 'left' },
                   { key: 'avg', label: '타율', align: 'right' },
+                  { key: 'obp', label: '출루율', align: 'right' },
                   { key: 'atBats', label: '타수', align: 'right' },
                   { key: 'hits', label: '안타', align: 'right' },
                   ...(showPA ? [{ key: 'pa', label: '타석', align: 'right' }] : []),
@@ -332,7 +338,7 @@ const BaseballDashboard = () => {
             <tbody className="divide-y divide-slate-800">
               {sortedPlayers.length === 0 ? (
                 <tr>
-                  <td colSpan={showPA ? 15 : 14} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={showPA ? 16 : 15} className="px-4 py-8 text-center text-slate-500">
                     등록된 선수 기록이 없습니다. 위 폼에서 선수를 추가해보세요.
                   </td>
                 </tr>
@@ -341,11 +347,12 @@ const BaseballDashboard = () => {
                   <tr key={p.id} className="hover:bg-slate-800/50 transition">
                     <td className="py-3 pl-4 pr-2 font-medium text-white sticky left-0 bg-slate-900 z-10 text-left">{p.name}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.avg === 'number' ? p.avg.toFixed(3) : '-'}</td>
+                    <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.obp === 'number' ? p.obp.toFixed(3) : '-'}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.atBats ?? 0}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.hits ?? 0}</td>
                     {showPA && <td className="py-3 px-2 font-mono text-right tabular-nums">{p.pa ?? 0}</td>}
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.ops === 'number' ? p.ops.toFixed(3) : '-'}</td>
-                    <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.wRC_plus === 'number' ? Math.round(p.wRC_plus) : '-'}</td>
+                    <td className="py-3 px-2 font-mono text-right tabular-nums">{typeof p.wRC_plus === 'number' ? p.wRC_plus.toFixed(1) : '-'}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.walks ?? 0}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.sb ?? 0}</td>
                     <td className="py-3 px-2 font-mono text-right tabular-nums">{p.single ?? 0}</td>
